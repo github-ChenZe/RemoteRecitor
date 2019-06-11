@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" href="style.css" rel="stylesheet">
+    <title>Deutsch</title>
+</head>
+<body>
+<table id="Panel">
+    <tr>
+        <td>
+            <input type="button" value="Show" onclick="reveal()">
+        </td>
+        <td>
+            <p id="CategoryTag"></p>
+        </td>
+        <td>
+            <p id="Translation"></p>
+        </td>
+        <td id="NEXT_cell">
+            <input id="NEXT" type="button" value="NEXT" onclick="newQuestion()">
+        </td>
+    </tr>
+</table>
+<div id="ArtikelButtons">
+    <input class="artikel" id="DER" value="der" type="button">
+    <input class="artikel" id="DIE" value="die" type="button">
+    <input class="artikel" id="DAS" value="das" type="button">
+</div>
+
+<div id="VowButtons">
+    <input class="vow" id="vA" value="Ä" type="button">
+    <input class="vow" id="vO" value="Ö" type="button">
+    <input class="vow" id="vU" value="Ü" type="button">
+    <input class="vow" id="vSS" value="ẞ" type="button">
+
+    <input class="vow" id="a" value="ä" type="button">
+    <input class="vow" id="o" value="ö" type="button">
+    <input class="vow" id="u" value="ü" type="button">
+    <input class="vow" id="ss" value="ß" type="button">
+
+</div>
+<input id="Stem" type="text" placeholder="Antworten">
+<input id="Decl" type="text" placeholder="Plural / III P. Singular">
+<p id="QuestionText"></p>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script>
+    var FOCUS_BOX;
+
+    function reveal() {
+        $('#Stem').val($('#Stem').get(0).answer);
+        $('#Decl').val($('#Decl').get(0).answer);
+    }
+
+    function setFocus(box) {
+        FOCUS_BOX = box;
+    };
+
+    $('#Stem').on("focus", function() { setFocus($('#Stem').get(0)); });
+    $('#Decl').on("focus", function() { setFocus($('#Decl').get(0)); });
+
+
+    /* artikel checker */
+
+    var checkAnswer = function () {
+        if (this.answer) {
+            $('.artikel').css('opacity', '.25');
+            $(this).css('opacity', '1');
+            $(this).css('color', 'green');
+        }
+    };
+
+    $('.artikel').on('click', checkAnswer);
+
+    var vows = document.getElementsByClassName("vow");
+
+    /* artikel checker ends hier */
+
+
+    function isUpperCase(character) {
+        return character == character.toUpperCase();
+    }
+
+    function isLowerCase(character) {
+        return character == character.toLowerCase();
+    }
+
+    var checkErganzen = function (box) {
+        if (box.answer && isUpperCase(box.answer[0]) && box.value && (!isUpperCase(box.value[0]))) {
+            box.value = box.value[0].toUpperCase() + box.value.substring(1);
+        }
+        if (box.answer && isLowerCase(box.answer[0]) && box.value && (!isLowerCase(box.value[0]))) {
+            box.value = box.value[0].toLowerCase() + box.value.substring(1);
+        }
+        if (box.answer == box.value) {
+            box.style.color = "green";
+            box.disabled = true;
+        }
+    };
+
+    var checkErganzen2 = function (box) {
+        if (!box) return;
+        if (!box.name) return;
+        if (box.name && isLowerCase(box.name[0]) && box.value && (!isLowerCase(box.value[0]))) {
+            box.value = box.value[0].toLowerCase() + box.value.substring(1);
+        }
+        if (box.name && isUpperCase(box.name[0]) && box.value && (!isUpperCase(box.value[0]))) {
+            box.value = box.value[0].toUpperCase() + box.value.substring(1);
+        }
+        if (box.name == box.value) {
+            box.style.color = "green";
+            box.disabled = true;
+        }
+    };
+
+    setInterval(function () {
+        checkErganzen(document.getElementById("Stem"));
+    }, 200);
+
+    setInterval(function () {
+        checkErganzen(document.getElementById("Decl"));
+    }, 200);
+
+    setInterval(function () {
+        checkErganzen2(FOCUS_BOX);
+    }, 200);
+
+
+
+    var letterEnter = function() {
+        if (FOCUS_BOX != null) {
+            var box = FOCUS_BOX;
+            var cursor = FOCUS_BOX.selectionStart;
+            var string = FOCUS_BOX.value;
+            FOCUS_BOX.value = string.substring(0, cursor);
+            FOCUS_BOX.value += this.value;
+            FOCUS_BOX.value += string.substring(cursor);
+            FOCUS_BOX.focus();
+            FOCUS_BOX.selectionStart = cursor + 1;
+            FOCUS_BOX.selectionEnd = FOCUS_BOX.selectionStart;
+        }
+    };
+
+    for (var i = 0; i < vows.length; i++) {
+        vows[i].addEventListener('click', letterEnter, false);
+    };
+
+
+    function loadCategory(question) {
+        if (question.startsWith("\\adjentry")) {
+            document.getElementById("CategoryTag").innerHTML = "adj.";
+        } else if (question.startsWith("\\adventry")) {
+            document.getElementById("CategoryTag").innerHTML = "adv.";
+        } else if (question.startsWith("\\ventry")) {
+            document.getElementById("CategoryTag").innerHTML = "v.";
+        } else if (question.startsWith("\\der")) { // DONE QUAD-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "n.";
+            document.getElementById("ArtikelButtons").style.display = "grid";
+        } else if (question.startsWith("\\das")) { // DONE QUAD-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "n.";
+            document.getElementById("ArtikelButtons").style.display = "grid";
+        } else if (question.startsWith("\\die")) { // DONE QUAD-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "n.";
+            document.getElementById("ArtikelButtons").style.display = "grid";
+        } else if (question.startsWith("\\entry")) { // DONE PENTA-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "n.";
+        } else if (question.startsWith("\\pentry")) {
+            document.getElementById("CategoryTag").innerHTML = "pron.";
+        } else if (question.startsWith("\\kentry")) {
+            document.getElementById("CategoryTag").innerHTML = "conj.";
+        } else if (question.startsWith("\\nentry")) {
+            document.getElementById("CategoryTag").innerHTML = "num.";
+        } else if (question.startsWith("\\uventry")) { // DONE PENTA-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "v.";
+        } else if (question.startsWith("\\dventry")) {
+            document.getElementById("CategoryTag").innerHTML = "v.";
+        } else if (question.startsWith("\\udventry")) { // DONE PENTA-ENTRY
+            document.getElementById("CategoryTag").innerHTML = "v.";
+        } else if (question.startsWith("\\aentry")) {
+            document.getElementById("CategoryTag").innerHTML = "adj./adv.";
+        } else if (question.startsWith("\\ientry")) {
+            document.getElementById("CategoryTag").innerHTML = "int.";
+        } else if (question.startsWith("\\eentry")) {
+            document.getElementById("CategoryTag").innerHTML = "excl.";
+        } else if (question.startsWith("\\rentry")) {
+            document.getElementById("CategoryTag").innerHTML = "prep.";
+        }
+    }
+
+    var textbox_count = 0;
+
+    function textbox(key) {
+        var box = document.createElement('input');
+        box.className = "erganzen";
+        var name = "erganzen" + textbox_count;
+        box.name = key;
+        box.id = name;
+        box.type = "text";
+        box.placeholder = "ergänzen";
+        box.answer = key;
+        document.getElementById("QuestionText").appendChild(box);
+        document.addEventListener('focus', function(e) {
+            if (e.target && (e.target.id == name)) {
+                FOCUS_BOX = e.target;
+            }
+        }, true);
+        textbox_count++;
+    }
+
+
+    function process_sentence_example(sentence) {
+        var pieces = sentence.split(/\\st{([^{}]*)}/);
+        for (var i = 0; i < pieces.length; i++) {
+            if ((i % 2) == 0) {
+                document.getElementById("QuestionText").innerHTML += pieces[i];
+            } else {
+                textbox(pieces[i]);
+            }
+        }
+    }
+
+    function entry(entry1, entry2, entry3, entry4, entry5) {
+        if (entry1[0] == 'd') {
+            document.getElementById("ArtikelButtons").style.display = "grid";
+            document.getElementById(entry1.toLocaleUpperCase()).answer = true;
+        }
+        document.getElementById("Stem").answer = entry2;
+        entry3 = entry3.split(/\\su{(.*)}/).join('');
+        document.getElementById("Decl").answer = entry3;
+        if (entry3.includes('Pl.')) document.getElementById("Decl").style.display = "none";
+        document.getElementById("Translation").innerHTML = entry4;
+        process_sentence_example(entry5);
+    }
+
+    function quad_entry(entry1, entry2, entry3, entry4) {
+        document.getElementById("Stem").answer = entry1;
+        entry2 = entry2.split(/\\su{(.*)}/).join('');
+        document.getElementById("Decl").answer = entry2;
+        document.getElementById("Translation").innerHTML = entry3;
+        process_sentence_example(entry4);
+    }
+
+    function tri_entry(entry1, entry2, entry3) {
+        document.getElementById("Stem").answer = entry1;
+        document.getElementById("Decl").answer = "";
+        document.getElementById("Decl").style.display = "none";
+        document.getElementById("Translation").innerHTML = entry2;
+        process_sentence_example(entry3);
+    }
+
+    function clear() {
+        /* Artikel Clear */
+        $("#ArtikelButtons").hide();
+        $('.artikel').css({ 'opacity': '1', 'color': 'black'});
+        document.getElementById("DER").answer = false;
+        document.getElementById("DIE").answer = false;
+        document.getElementById("DAS").answer = false;
+
+        $("#Stem").val('');
+        $('#Stem').css('color', 'black');
+        $("#Stem").removeAttr('disabled');
+
+        $("#Decl").val('');
+        $('#Decl').css({ 'color': 'black', 'display': 'block' });
+        $("#Decl").removeAttr('disabled');
+
+        $('#QuestionText').empty();
+    }
+
+    function macro(question) {
+        question = question.replace(/\\ea /g, 'ä');
+        question = question.replace(/\\eA /g, 'Ä');
+        question = question.replace(/\\uo /g, 'ö');
+        question = question.replace(/\\uO /g, 'Ö');
+        question = question.replace(/\\yu /g, 'ü');
+        question = question.replace(/\\yU /g, 'Ü');
+        question = question.replace(/\\ss /g, 'ß');
+        question = question.replace(/\\fur /g, 'für');
+
+        question = question.replace(/\\ea/g, 'ä');
+        question = question.replace(/\\eA/g, 'Ä');
+        question = question.replace(/\\uo/g, 'ö');
+        question = question.replace(/\\uO/g, 'Ö');
+        question = question.replace(/\\yu/g, 'ü');
+        question = question.replace(/\\yU/g, 'Ü');
+        question = question.replace(/\\ss/g, 'ß');
+        question = question.replace(/\\fur/g, 'für');
+
+        question = question.replace(/\\ /g, '');
+        question = question.replace(/\//g, '');
+        return question;
+    }
+
+    function processQuestion(question) {
+        clear();
+        var groups;
+        loadCategory(question);
+        question = macro(question);
+        if ((groups = question.match(/\\([A-Za-z]*){(.*)}{(.*)}{(.*)}{(.*)}{(.*)}/)) != null) {
+            if (groups[1] != "entry") {
+                alert("Unhandled message.");
+            }
+            entry(groups[2], groups[3], groups[4], groups[5], groups[6]);
+        } else if ((groups = question.match(/\\([A-Za-z]*){(.*)}{(.*)}{(.*)}{(.*)}/)) != null) {
+            if (groups[1].match(/(der)|(das)|(die)/)) {
+                entry(groups[1], groups[2], groups[3], groups[4], groups[5]);
+            } else if (groups[1].match(/(uventry)|(udventry)/)) {
+                quad_entry(groups[2], groups[3], groups[4], groups[5]);
+            } else {
+                alert("Unhandled message.")
+            }
+        } else if ((groups = question.match(/\\([A-Za-z]*){(.*)}{(.*)}{(.*)}/)) != null) {
+            if (groups[1].match(/(adjentry)|(adventry)|(ventry)|(pentry)|(kentry)|(nentry)|(dventry)|(aentry)|(ientry)|(eentry)|(rentry)/)) {
+                tri_entry(groups[2], groups[3], groups[4]);
+            } else {
+                alert("Unhandled message.")
+            }
+        } else {
+            alert("Unhandled message.")
+        }
+    }
+
+    function loadQuestion(question) {
+        $('#NEXT').css('color', 'black');
+        $('#NEXT').removeAttr('disabled');
+        console.log(question);
+        var dict = JSON.parse(question);
+        var questionText = dict["Question"];
+        processQuestion(questionText);
+    }
+
+    function newQuestion() {
+        $('#NEXT').css('color', 'red');
+        $('#NEXT').attr('disabled', 'disabled');
+
+        var xhr = new XMLHttpRequest();
+        var form = new FormData();
+        form.append("subject", 'deutsch_entry');
+        form.append("options", "-1");
+        xhr.open("POST", "http://27.102.67.104/cgi-bin/server.py", true);
+        xhr.onreadystatechange = function (ev) {
+            if (xhr.readyState == 4) {
+                loadQuestion(xhr.responseText);
+            }
+        };
+        xhr.send(form);
+    }
+
+    newQuestion();
+</script>
+</html>

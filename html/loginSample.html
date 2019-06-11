@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LaTʃæt</title>
+    <link rel="stylesheet" href="LoginCSS.css" type="text/css">
+    <link rel="icon" href="favicon.ico">
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},/*
+  "HTML-CSS": {
+      linebreaks: {automatic: true}
+  },
+  SVG: {
+      linebreaks: {automatic: true}
+  },
+  CommonHTML: {
+      linebreaks: {automatic: true}
+  }*/
+});
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "all" } }
+});
+MathJax.Ajax.config.path["mhchem"] =
+  "https://cdnjs.cloudflare.com/ajax/libs/mathjax-mhchem/3.1.0";
+MathJax.Hub.Config({
+  TeX: {
+    extensions: ["[mhchem]/mhchem.js"]
+  }
+});
+    </script>
+    <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+<body>
+<div id="Login">
+    <div class="">
+        <input class="cell" type="text" id="Username" placeholder="账号，或者你想要的账号">
+    </div>
+    <div class="">
+        <input class="cell" type="password" id="Password" placeholder="密码，或者你想要的密码">
+    </div>
+    <div class="">
+        <input type="button" id="submit" value="登录" onclick="login()">
+    </div>
+    <div class="">
+        <input type="button" id="register" value="注册" onclick="register()">
+    </div>
+</div>
+<div id="List" style="display: none;">
+    <div class="">
+        <input type="text" readonly="readonly" id="Self_ID" value="">
+    </div>
+    <div class="">
+        <input type="text" readonly="readonly" id="Connecting_State" value="" onclick="logout()">
+    </div>
+    <div id="Add_Friend_Wrap">
+        <input type="text" id="Add_Friend" placeholder="添加">
+    </div>
+</div>
+<div id="MessageArea" style="display: none">
+    <div id="send">
+        <div style="position: absolute; top: 0; width: 100%;">
+            <table style="position: absolute;top:0; margin:0; width: 100%;text-align: center;">
+                <tr>
+                    <td>
+                        <input type="button" id="backToFriendsList" value="←" onclick="unloadCurrentFriend()">
+                    </td>
+                    <td>
+                        <textarea id="content" rows="1" onblur="blurContentArea()"></textarea>
+                    </td>
+                    <td>
+                        <input type="button" id="confirm" value="⇑" onclick="sendMessage()" ondblclick="onlongtouch()">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="position: absolute; bottom: 0; width: 100%;">
+            <table style="margin: 0; margin-bottom: 15px; width: 100%;text-align: center;font-size: 36px;">
+                <tr>
+                    <td><input class="mathkey" type="button" value="$" onclick="insertFormula()"></td>
+                    <td><input class="mathkey" type="button" value="¾" onclick="insertFrac()"></td>
+                    <td><input class="mathkey" type="button" value="√" onclick="insertSqrt()"></td>
+                    <td><input class="mathkey" type="button" value="+" onclick="insertPlus()"></td>
+                    <td><input class="mathkey" type="button" value="-" onclick="insertMinus()"></td>
+                    <td><input class="mathkey" type="button" value="*" onclick="insertAsterisk()"></td>
+                    <td><input class="mathkey" type="button" value="×" onclick="insertCross()"></td>
+                    <td><input class="mathkey" type="button" value="·" onclick="insertDot()"></td>
+                    <td><input class="mathkey" type="button" value="=" onclick="insertEqual()"></td>
+                </tr>
+                <tr>
+                    <td><input class="mathkey" type="button" value="→" onclick="insertRArrow()"></td>
+                    <td><input class="mathkey" type="button" value="←" onclick="insertLArrow()"></td>
+                    <td><input class="mathkey" type="button" value="^" onclick="insertSup()"></td>
+                    <td><input class="mathkey" type="button" value="_" onclick="insertSub()"></td>
+                    <td><input class="mathkey" type="button" value="{}" onclick="insertCurBra()"></td>
+                    <td><input class="mathkey" type="button" value="\" onclick="insertBackSlash()"></td>
+                    <td><input class="mathkey" type="button" value="T" onclick="insertNoTag()"></td>
+                    <td><input class="mathkey" type="button" value="←" onclick="curOffset(-1)"></td>
+                    <td><input class="mathkey" type="button" value="→" onclick="curOffset(1)"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="advanced" style="display: none;">
+        <form enctype="multipart/form-data" id="advancedForm">
+            <input type="text" id="alias" name="alias" placeholder="为你上传的文件起个名">
+            <p id="uploadState"></p>
+            <input type="file" id="upload" name="upload" contenteditable="true">
+        </form>
+    </div>
+</div>
+<div id="EqPreview" style="display: none; position: fixed; top: 0; left:0; width: 100%; height: 50%; background-color: rgba(0,0,0,0.2)">
+    <div style="position: absolute; left: 50%; top:50%; transform: translateX(-50%) translateY(-50%); background: rgba(255,255,255,0.8);">
+        <p id="EqPreviewer" style="font-size:72px; overflow-x: scroll">$$\mu\notag$$</p>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+    /**
+     * Created by Cancer on 2017/1/28.
+     */
+
+    var Socket = new WebSocket("ws://45.32.72.102:1235");
+
+    var ID;
+    var Password;
+    var LoggedIn = false;
+
+    var CurrentTarget = "";
+    var TimeCount;
+    var FriendLabels;
+    var Messages;//{friend_name: [message divs with messageID]}
+
+    var LoginDialog = document.getElementById("Login");
+    var IdBox = document.getElementById("Username");
+    var PasswordBox = document.getElementById("Password");
+    var SubmitButton = document.getElementById("submit");
+
+    var StateIndicator = document.getElementById("Connecting_State");
+    var AddFriend = document.getElementById("Add_Friend");
+    var FriendArea = document.getElementById("List");
+    var PanelRight = document.getElementById("MessageArea");
+    var SendingArea = document.getElementById("send");
+    var ContentBox = document.getElementById("content");
+    var SendButton = document.getElementById("confirm");
+    var AdvancedArea = document.getElementById("advanced");
+    var AdvancedForm = document.getElementById("advancedForm");
+    var Upload = document.getElementById("upload");
+    var UploadState = document.getElementById("uploadState");
+    var PreviewDiv = document.getElementById("EqPreview");
+    var Preview = document.getElementById("EqPreviewer");
+    var queryHistoryEachTime = 10;
+    var LastCursor = 0;
+    var CurrentCursor = 0;
+    var LastInnerHtml = "";
+    var CurrentInnerHtml = "";
+    var StandardParaWrapWidth = document.body.clientWidth - 30 - 150 - 5;
+    var Wraps = [];
+
+    //键盘弹出时布局更改
+    ContentBox.onclick = ContentBox.onfocus = function() { setTimeout(function () {
+        var messageArea = Messages[CurrentTarget];
+        rollToBottom(messageArea);
+    }, 500) };
+
+    //查询历史记录
+    setInterval(function() {
+        if (CurrentTarget == "") return;
+        var messageArea = Messages[CurrentTarget];
+        // allow 1px inaccuracy by adding 1
+        if (messageArea.scrollTop < 1) {
+            queryHistory(CurrentTarget);
+        }
+    }, 2000);
+
+    //检测输入框光标移动
+    setInterval(function() {
+        CurrentCursor = ContentBox.selectionStart;
+            LastCursor = CurrentCursor;
+            inTextArea(CurrentCursor);
+
+    }, 500);
+
+    /* 套接字与服务器处理部分 */
+    /* Begin Socket event handler */
+
+    Socket.onopen = function () {
+        SubmitButton.style.backgroundColor = "#0077d9";
+        tryLogin();
+    }
+
+    Socket.onmessage = function (event) {
+        var message = JSON.parse(event.data);
+        if (message.From == "Server") {
+            if (message.Content == "Login successful.") {
+                afterLogin();
+            }  else {
+                if(LoggedIn) {
+                    if (message.Action == "Friend") {
+                        pushFriend(message.Content, message.LastMessage);
+                    } else if (message.Action == "ResponsePing" && message.Content == "Connected: True") {
+                        renewState();
+                    } else if (message.Action == "Executed") {
+
+                    }
+                }
+            }
+        } else if (message.Action == "Received") {
+            sentMessage(message);
+        } else {
+            receivedMessage(message);
+        }
+    }
+
+    Socket.onerror = function (event) {
+        //There is, in fact, nothing to do when an error occurs.
+        //出错了往往都是无药可救了。
+        alert("尝试连接服务器时出现异常，刷新以重试。");
+    }
+
+    function sendToServer(action, optionalParams) {
+        var message = arguments[1] ? arguments[1] : {};
+        message["To"] = "Server";
+        message["Action"] = action;
+        Socket.send(JSON.stringify(message)+"\n");
+    }
+
+    /* End Socket event handler */
+
+    /* 连接状态显示相关 */
+    /* Begin connection state */
+
+    setInterval(function() {
+        if (LoggedIn) {
+            sendToServer("Ping");
+        }
+    }, 200);
+
+    function renewState() {
+        TimeCount++;
+        //StateIndicator.value = '---logout---'.substr(6 - TimeCount % 7, 2 * (TimeCount % 7));
+        StateIndicator.value = 'LogoutLogout'.substr(TimeCount % 6, 6);
+    }
+
+    /* End connection state */
+
+    /* 账户登录注册相关处理部分 */
+    /* Begin account affairs */
+
+    function loadIdPassword() {
+        ID = IdBox.value;
+        Password = PasswordBox.value;
+        return { "ID": ID, "Password": Password };
+    }
+
+    function accountManipulation(operation) {
+        var idPasswordArray = loadIdPassword();
+        sendToServer(operation, idPasswordArray)
+    }
+
+    function login() {
+        accountManipulation("Login");
+    }
+
+    function register() {
+        accountManipulation("Register");
+    }
+
+
+    function tryLogin() {
+        ID = getCookie("Chat_login_username")
+        Password = getCookie("Chat_login_password");
+        if (ID == "") return;
+        sendToServer("Login", {"ID": ID, "Password": Password});
+    }
+
+    function resetGlobal() {
+        CurrentTarget = "";
+        TimeCount = 0;
+        FriendLabels = {};
+        Messages = new Array();//{friend_name: [message divs]}
+    }
+
+    function afterLogin() {
+        LoginDialog.style.display = "none";
+        FriendArea.style.display = 'block';
+        LoggedIn = true;
+        document.getElementById("Self_ID").value = ID;
+
+        resetGlobal()
+        sendToServer("GetFriends");
+        generateCookie();
+    }
+
+    function logout() {
+        var toLogout = confirm("你要注销吗？");
+        if (!toLogout) return;
+        clearCookie()
+        LoggedIn = false;
+        //TODO: hide the Panel and show the login dialog, just reverse the method "afterLogin"
+        //这儿的正确方法是把面板隐藏掉然后显示登陆窗口，也就是把"afterLogin"方法反过来
+        location.reload();
+    }
+
+    function generateCookie() {
+        var date = new Date();
+        var expiresDays = 365;
+        date.setTime(date.getTime() + expiresDays * 24 * 3600 * 1000);
+        document.cookie = "Chat_login_username=" + ID + "; expires="+date.toUTCString();
+        document.cookie = "Chat_login_password=" + Password + "; expires="+date.toUTCString();
+    }
+
+    function getCookie(name){
+        var strCookie = document.cookie;
+        var arrCookie = strCookie.split("; ");
+        for(var i = 0; i < arrCookie.length; i++){
+            var arr = arrCookie[i].split("=");
+            if(arr[0] == name) return arr[1];
+        }
+        return "";
+    }
+
+    function clearCookie() {
+        var date = new Date();
+        date.setTime(date.getTime() - 1);
+        document.cookie = "Chat_login_username=" + ID + "; expires="+date.toUTCString();
+        document.cookie = "Chat_login_password=" + Password + "; expires="+date.toUTCString();
+    }
+
+    /* End account affairs */
+
+    /* 信息发送相关处理 */
+    /* Begin send message */
+
+    function sendMessageTo(To, Content) {
+        var message = {
+            "To": To,
+            "Content": Content,
+        }
+        Socket.send(JSON.stringify(message));
+    }
+
+    function sendMessage() {
+        if (CurrentTarget == "") return;
+        sendMessageTo(CurrentTarget, ContentBox.value);
+        ContentBox.value = "";
+    }
+
+    /* End send message */
+    
+    /* 信息发送的高级操作 */
+    /* Begin Advanced operation */
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        SendButton.addEventListener("touchstart", touchstart, false);
+        SendButton.addEventListener("touchend", touchend, false);
+        document.addEventListener("touchstart", touchOut, false);
+    });
+
+    var onlongtouch;
+    var timer, lockTimer;
+    var touchduration = 1000; //length of time we want the user to touch before we do something
+
+    function touchstart(e) {
+        if(lockTimer){
+            return;
+        }
+        timer = setTimeout(onlongtouch, touchduration);
+        lockTimer = true;
+    }
+
+    function touchend() {
+        //stops short touches from firing the event
+        if (timer){
+            clearTimeout(timer); // clearTimeout, not cleartimeout..
+            lockTimer = false;
+        }
+    }
+
+    onlongtouch = function() {
+        AdvancedArea.style.display = "block";
+    };
+
+    function touchOut(e) {
+        var x = e.touches[0].pageX - window.pageXOffset;
+        var y = e.touches[0].pageY - window.pageYOffset;
+        var target = document.elementFromPoint(x, y);
+
+        if (!target) return;
+
+        if (!(target.id == "advanced" || target.parentNode.parentNode.id == "advanced")){
+            AdvancedArea.style.display = "none";
+        }
+    }
+
+    Upload.onchange = function() {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
+                    if (xhr.responseText != '0') {
+                        sendToServer("Alias" ,JSON.parse(xhr.responseText));
+                        onUploadSuccess();
+                    }
+                }
+            } else if (xhr.readyState == 1) {
+                onUploading();
+            }
+        }
+        var formData = new FormData(AdvancedForm);
+        formData.append("user", ID);
+        formData.append("type", /[^\/]*/.exec(Upload.files[0].type));
+        //formData.append("extension", /\..*/.exec(Upload.files[0].type));
+        xhr.open("post","upload.php", true);
+        xhr.send(formData);
+    }
+
+    function onUploadSuccess() {
+        UploadState.innerHTML = "";
+        AdvancedForm.reset();
+    }
+
+    function onUploading() {
+        UploadState.innerHTML = "正在上传..."
+    }
+    
+    /* End Advanced operation */
+
+    /* 信息排版相关 */
+    /* Begin message layout */
+
+    function pushSession(name, lastMessage) {
+        if (! (name in Messages)) {
+            var newMessagesDiv = document.createElement("div");
+            newMessagesDiv.className = "messages";
+            newMessagesDiv.id = name + "_messages";
+            Messages[name] = newMessagesDiv;
+            if (arguments[1]) {
+                Messages[name].firstMessage = lastMessage;
+                Messages[name].partition = lastMessage;
+                Messages[name].lastMessage = -1;
+            }
+        } else {
+            if (arguments[1]) {
+                Messages[name].firstMessage = lastMessage;
+                Messages[name].partition = lastMessage;
+                Messages[name].lastMessage = Messages[name].lastChild.messageID;
+            }
+        }
+    }
+
+    function constructMessageDiv(message, type) {
+        var toDisplay = "<i style='font-size: 36px; line-height:12px;'>" + message.DateTime + "</i><br>" + message.Content + "<br>";
+        var newContent = document.createElement("p");
+        newContent.className = "message";
+        newContent.innerHTML = toDisplay;
+
+        var newParaWrap = document.createElement("div");
+        newParaWrap.className = "messageParaWrap";
+        newParaWrap.appendChild(newContent);
+
+        var newDivWrap = document.createElement("div");
+        newDivWrap.className = "messageWrap " + type;
+        newDivWrap.appendChild(newParaWrap);
+        newDivWrap.id = "Wrap" + message.id;
+        Wraps.push(newDivWrap);
+        newDivWrap.messageID = message.id;
+
+        var newTD = document.createElement("div");
+        newTD.className = "cell"
+        newTD.align = "right";
+        newTD.appendChild(newDivWrap);
+
+        var newIcon = document.createElement("img");
+        newIcon.className = "portrait";
+        newIcon.src = (type == "sent" ? ID : message.From) + "_portrait.png";
+        newIcon.onerror = function () {
+            newIcon.onerror = null;
+            newIcon.src = "icon.png";
+        }
+
+        var newTDIcon = document.createElement("div");
+        newTDIcon.className = "cell";
+        newTDIcon.appendChild(newIcon);
+        newTDIcon.style.verticalAlign = "top";
+
+        var newTR = document.createElement("div");
+        newTR.className = "row"
+        if (type == "sent") {
+            newTR.appendChild(newTD);
+            newTR.appendChild(newTDIcon);
+        } else if (type = "received") {
+            newTR.appendChild(newTDIcon);
+            newTR.appendChild(newTD);
+        }
+
+
+        var newTB = document.createElement("div");
+        newTB.className = type + "Table";
+        newTB.appendChild(newTR);
+
+        var newDiv = document.createElement("div");
+        newDiv.appendChild(newTB);
+        newDiv.className = "messageOuterWrap";
+        newDiv.messageID = message.id;
+
+        newDiv.innerWrap = newDivWrap;
+        newDiv.innerPara = newContent;
+
+        return newDiv;
+    }
+
+    function receivedMessage(message) {
+        pushSession(message.From)
+        pushMessageDiv(message.From, constructMessageDiv(message, "received"));
+        renewBound(message.From ,message.id);
+    }
+
+    function sentMessage(message) {
+        pushSession(message.To);
+        pushMessageDiv(message.To, constructMessageDiv(message, "sent"));
+        renewBound(message.To, message.id);
+    }
+
+    function pushMessageDiv(name, newDiv) {
+        var messageArea = Messages[name];
+        // allow 1px inaccuracy by adding 1
+        var isScrolledToBottom = messageArea.scrollHeight - messageArea.clientHeight <= messageArea.scrollTop + 1;
+        var index = allocatePlace(messageArea, newDiv.messageID);
+        if (index == -1) {
+            messageArea.appendChild(newDiv);
+        } else {
+            messageArea.insertBefore(newDiv, messageArea.childNodes[index]);
+        }
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+        // scroll to bottom if isScrolledToBottom
+        MathJax.Hub.Queue(function() {
+            if (isScrolledToBottom)
+                rollToBottom(messageArea);
+        });
+        MathJax.Hub.Queue(function() {
+            newDiv.innerWrap.style.width = StandardParaWrapWidth + "px";
+        })
+    }
+
+    function allocatePlace(area, messageID) {
+        var lower = 0;
+        var upper = area.childNodes.length;
+        if (upper == 0) return -1; //No element in children, so use append
+        if (messageID > area.childNodes[upper - 1].messageID) return -1;  //also use append
+        while (lower + 1 != upper) {
+            var middle = (lower + upper) >> 1;
+            if (messageID < area.childNodes[middle].messageID) {
+                upper = middle;
+            } else {
+                lower = middle;
+            }
+        }
+        if (messageID < area.childNodes[lower].messageID) {
+            return lower;
+        } else {
+            return upper;
+        }
+    }
+
+    function clearDisplayedMessage(name) {
+        if (name in Messages) {
+            var messageArea = Messages[name];
+            PanelRight.removeChild(messageArea);
+        }
+    }
+
+    function rollToBottom(area) {
+        area.scrollTop = area.scrollHeight - area.clientHeight;
+    }
+
+    /* End message layout */
+
+    /* 好友显示相关 */
+    /* Begin friend display */
+
+    function constructFriendLabel(name) {
+        var newFriendLabel = document.createElement("input");
+        newFriendLabel.type = "text";
+        newFriendLabel.unread = 0;
+        newFriendLabel.value = name;
+        newFriendLabel.className = "friend";
+        newFriendLabel.id = "friend_" + name;
+        newFriendLabel.readOnly = "readOnly";
+        newFriendLabel.onclick = function () {
+            loadFriend(name);
+        }
+        return newFriendLabel;
+    }
+
+    AddFriend.onkeydown = function (event) {
+        if (event.keyCode == 13) {
+            sendToServer("AddFriend", {"ID": AddFriend.value});
+            AddFriend.value = "";
+        }
+    }
+
+    function pushFriend(name, lastMessage) {
+        var newDiv = document.createElement("div");
+        var newFriendLabel = constructFriendLabel(name);
+        FriendArea.appendChild(newDiv);
+        newDiv.appendChild(newFriendLabel);
+        newDiv.className = "friendLabelContainer";
+
+        var padding = 20;
+        var newIcon = document.createElement("img");
+        newIcon.src = name + "_portrait.png";
+        newIcon.onerror = function () {
+            newIcon.onerror = null;
+            newIcon.src = "icon.png";
+        }
+        newIcon.className = "portrait";
+        newIcon.style.position = "absolute";
+        newIcon.style.left = padding + "px";
+        newIcon.style.top = padding + "px";
+        newIcon.style.height = (newDiv.clientHeight - 2 * padding) + "px";
+        newIcon.style.width = (newDiv.clientHeight - 2 * padding) + "px";
+        newDiv.appendChild(newIcon);
+
+        FriendLabels[name] = newFriendLabel;
+        pushSession(name, lastMessage);
+        queryUnread(name);
+    }
+
+    function unloadFriend(name) {
+        if (name != "") { //only applies on the first time loading a friend
+            clearDisplayedMessage(name);
+            FriendArea.style.display = "block";
+            PanelRight.style.display = "none";
+            CurrentTarget = "";
+            ContentBox.placeholder = "";
+        }
+    }
+
+    function unloadCurrentFriend() {
+        unloadFriend(CurrentTarget);
+    }
+
+    function loadFriend(name) {
+        CurrentTarget = name;
+
+        pushSession(name);
+        PanelRight.insertBefore(Messages[name], SendingArea);
+
+        FriendArea.style.display = "none";
+        PanelRight.style.display = "block";
+        ContentBox.placeholder = "To: " + name;
+
+        var messageArea = Messages[name];
+        rollToBottom(messageArea);
+
+        VanishUnread(name);
+        renewLastMessage(name, Messages[name].lastMessage);
+    }
+
+    function IncreaseUnread(name) {
+        FriendLabels[name].unread++;
+        FriendLabels[name].value = name + " [" + FriendLabels[name].unread + "]";
+    }
+
+    function VanishUnread(name) {
+        FriendLabels[name].unread = 0;
+        FriendLabels[name].value = name;
+    }
+
+    (function (d) {
+        var
+                ce = function (e, n) {
+                    var a = document.createEvent("CustomEvent");
+                    a.initCustomEvent(n, true, true, e.target);
+                    e.target.dispatchEvent(a);
+                    a = null;
+                    return false
+                },
+                nm = true, sp = {x: 0, y: 0}, ep = {x: 0, y: 0}, isInEq = false;
+                touch = {
+                    touchstart: function (e) {
+                        isInEq = false;
+                        sp = {x: e.touches[0].pageX, y: e.touches[0].pageY}
+                        var targetElement = document.elementFromPoint(sp.x, sp.y);
+                        do {
+                            if (targetElement.className.indexOf("mjx") != -1) {
+                                isInEq = true;
+                                break;
+                            }
+                            targetElement = targetElement.parentElement;
+                        } while (targetElement != null)
+                    },
+                    touchmove: function (e) {
+                        nm = false;
+                        ep = {x: e.touches[0].pageX, y: e.touches[0].pageY}
+                    },
+                    touchend: function (e) {
+                        if (nm || isInEq) {
+                            ce(e, 'fc')
+                        } else {
+                            var x = ep.x - sp.x, xr = Math.abs(x), y = ep.y - sp.y, yr = Math.abs(y);
+                            if (Math.max(xr, yr) > 300) {
+                                ce(e, (xr > yr ? (x < 0 ? 'swl' : 'swr') : (y < 0 ? 'swu' : 'swd')))
+                            }
+                        }
+                        ;
+                        nm = true
+                    },
+                    touchcancel: function (e) {
+                        nm = false
+                    }
+                };
+        for (var a in touch) {
+            d.addEventListener(a, touch[a], false);
+        }
+    })(document);
+
+    PanelRight.addEventListener('swr',function () {
+        unloadCurrentFriend();
+    },false);
+
+    /* End friend display */
+
+    document.getElementById("confirm").height = document.getElementById("content").height;
+    //document.getElementById("confirm").height = document.getElementById("content").height;
+
+    /* 历史查询相关 */
+    /* Begin history query */
+
+    function queryHistory(name) {
+        sendToServer("History", {"Target": name, "MaxIndex": Messages[name].firstMessage, "Count": queryHistoryEachTime});
+    }
+
+    function queryUnread(name) {
+        sendToServer("Unread", {"Target": name, "StartIndex": Messages[name].partition});
+    }
+
+    function renewBound(name, messageID) {
+        if (typeof Messages[name].firstMessage == 'undefined') return;
+
+        Messages[name].firstMessage = Messages[name].firstMessage < messageID ? Messages[name].firstMessage : messageID - 1;
+        if (Messages[name].lastMessage < messageID) {
+            Messages[name].lastMessage = messageID;
+            if (Messages[name].lastMessage > Messages[name].partition) {
+                navigator.vibrate(500);
+                if (CurrentTarget == name) {
+                    renewLastMessage(name, messageID);
+                } else {
+                    IncreaseUnread(name);
+                }
+            }
+        }
+    }
+
+    function renewLastMessage(name, newID) {
+        sendToServer("UpdateLastMessageID",{"Target":name,"NewID":newID})
+    }
+
+    /*End history query */
+
+    /* Begin formula layout */
+    /* 公式排版相关 */
+
+    function curOffset(offset) {
+        var cursorPos = ContentBox.selectionStart;
+        ContentBox.focus()
+        ContentBox.selectionStart = cursorPos + offset;
+        ContentBox.selectionEnd = ContentBox.selectionStart;
+    }
+
+    function insertToken(token, cursorOffset) {
+        var cursorPos = ContentBox.selectionStart;
+        ContentBox.value = ContentBox.value.substr(0, cursorPos) + token + ContentBox.value.substr(cursorPos);
+        ContentBox.focus();
+        ContentBox.selectionStart = cursorPos + cursorOffset;
+        ContentBox.selectionEnd = ContentBox.selectionStart;
+    }
+
+    function insertFormula() {
+        insertToken("$$$$", 2);
+    }
+
+    function insertFrac() {
+        insertToken("\\frac{}{}", 6);
+    }
+
+    function insertSqrt() {
+        insertToken("\\sqrt{}", 6);
+    }
+
+    function insertPlus() {
+        insertToken("+", 1);
+    }
+
+    function insertMinus() {
+        insertToken("-", 1);
+    }
+
+    function insertAsterisk() {
+        insertToken("*", 1);
+    }
+
+    function insertCross() {
+        insertToken("\\times ", 7);
+    }
+
+    function insertDot() {
+        insertToken("\\cdot ", 6);
+    }
+
+    function insertRArrow() {
+        insertToken("\\overrightarrow{}", 16);
+    }
+
+    function insertLArrow() {
+        insertToken("\\overleftarrow{}", 15);
+    }
+
+    function insertEqual() {
+        insertToken("=", 1);
+    }
+
+    function insertSup() {
+        insertToken("^{}", 2);
+    }
+
+    function insertSub() {
+        insertToken("_{}", 2);
+    }
+
+    function insertSqrt() {
+        insertToken("\\sqrt{}", 6);
+    }
+
+    function insertCurBra() {
+        insertToken("{}", 1);
+    }
+
+    function insertBackSlash() {
+        insertToken("\\", 1);
+    }
+
+    function insertNoTag() {
+        insertToken("\\notag ", 7);
+    }
+
+    function blurContentArea() {
+        PreviewDiv.style.display = "none";
+    }
+
+    function inTextArea(cursor) {
+        var string = ContentBox.value;
+        if ((string.substr(0, cursor).match(/\$\$/g) || []).length % 2 == 1) {
+            PreviewDiv.style.display = "block";
+            inEq(cursor);
+        } else {
+            PreviewDiv.style.display = "none";
+        }
+    }
+
+    function inEq(cursor) {
+        var string = ContentBox.value;
+        var startIndex = string.substr(0, cursor).lastIndexOf("\$\$") + 2;
+        var endIndex = string.substr(cursor).indexOf("\$\$") + cursor;
+        var CurrentInnerHtml = "$$" + string.substring(startIndex, endIndex) + " \\notag $$";
+        if (LastInnerHtml != CurrentInnerHtml) {
+            LastInnerHtml = CurrentInnerHtml;
+            Preview.innerHTML = CurrentInnerHtml;
+            MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+        }
+    }
+
+    /* End formula layout */
+
+    /* window.onbeforeunload = function (evt) {
+        return '你真的要退出吗？';
+    } */
+</script>
+</html>

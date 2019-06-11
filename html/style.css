@@ -1,0 +1,183 @@
+#CategoryTag {
+    border: thin black solid;
+    padding-left: 5px;
+    padding-right: 5px;
+    display: inline-block;
+}
+
+#progressBar {
+    width: 100%;
+    line-height: 1px;
+    /* background-image: linear-gradient(to right, green, green, green, green, green, green, white, green, green, green, green, green, green); */
+}
+
+#Panel {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    top: 0;
+    padding-top: 8px; 
+}
+
+.erganzen {
+    font-size: 24px;
+    text-align: center;
+    border-bottom: thin solid black;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    outline: 0;
+}
+
+#PhantomPanel {
+    height: 53px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+}
+
+#SECTION {
+    display: block;
+    text-align: left;
+}
+
+/*#PREV_cell {
+    text-align: right;
+}
+
+#NEXT_cell {
+    text-align: right;
+}*/
+
+#NEXT {
+    display: inline-block;
+}
+
+#ArtikelButtons {
+    display: grid;
+    grid-template: 36px/1fr 1fr 1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
+}
+
+#VowButtons {
+    margin: 5px;
+    display: grid;
+    grid-template: 24px/1fr 1fr 1fr 1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
+}
+
+.vow {
+    display: inline-block;
+    font-size: 16px;
+    height: 24px;
+    border: thin solid black;
+    word-wrap:break-word;
+    white-space: normal;
+}
+
+#Translation {
+    display: inline-block;
+}
+
+#Stem, #Decl {
+    display: block;
+    width: 100%;
+    line-height: 1.5;
+    outline: 0;
+    text-align: center;
+    font-size: 32px;
+}
+
+#QuestionText, #PoliticsQuestionText {
+    text-align: center;
+    font-size: 18px;
+    margin: 10px auto;
+}
+
+#PoliticsQuestionText {
+    text-align: left;
+}
+
+#Buttons {
+    display: grid;
+    grid-template: auto/1fr 1fr 1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
+}
+
+#Categories {
+    display: grid;
+    grid-template: 24px/1fr 1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
+}
+
+.category {
+    background: gray;
+}
+
+#GeneralButtons {
+    display: grid;
+    grid-template: 36px/1fr;
+    grid-row-gap: 5px;
+    grid-column-gap: 5px;
+}
+
+.option, .artikel {
+    display: inline-block;
+    font-size: 18px;
+    border: thin solid black;
+    word-wrap:break-word;
+    white-space: normal;
+}
+
+.politicalOption {
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+
+.politicalOption + .politicalOption{
+    margin-top: 10px;
+}
+
+.statisticsGraph {
+    display: block;
+    margin: auto;
+}
+
+#StatisticsWrap {
+    position: relative;
+    width: 280px;
+    margin: auto;
+}
+
+#matchRate {
+    position: absolute;
+    left: 128px;
+    top: 88px;
+    font-size: 18px;
+}
+
+#mistakenRate {
+    position: absolute;
+    left: 65px;
+    top: 169px;
+    font-size: 18px;
+}
+
+#PanelWrapper {
+    position: relative;
+}
+
+body {
+    background-image: url('questionBackground.jpg');
+    background-repeat: no-repeat;
+    background-size: 1440px 675px;
+}
+
+* {
+    box-sizing: border-box;
+}
