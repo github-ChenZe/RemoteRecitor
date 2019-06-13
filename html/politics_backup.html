@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" href="style.css" rel="stylesheet">
+    <link type="text/css" href="LoginCSS.css" rel="stylesheet">
+    <title>2018-19年时事精选训练</title>
+</head>
+<body>
+<div id="Login">
+    <h3 class="loginTitle" style="text-align: center;">2019年中考时事及禁毒知识冲刺训练</h3>
+    <div class="loginWrap">
+        <table align="center" style="width: 80%;">
+        <tr>
+            <td class="loginFieldLabel" width="9%" valign="top"><span>👤</span></td>
+        <td>
+        <div class="">
+            <input class="cell" type="text" id="Username">
+        </div>
+        </td>
+        </tr>
+        <tr>
+            <td class="loginFieldLabel" width="9%" valign="top"><span>🔓</span></td>
+        <td>
+        <div class="">
+            <input class="cell" type="password" id="Password">
+        </div>
+        </td>
+        </tr>
+        </table>
+        <div class="" style="margin-top: 2%; margin-bottom: 2%;">
+            <input type="button" id="submit" value="登 录" onclick="login()">
+        </div>
+    </div>
+    <div>
+        <img src="loginBackground.png" class="loginBackground">
+    </div>
+</div>
+<div id="Sections">
+    <h3 class="sectionTitle" style="text-align: center;">2019年中考时事及禁毒知识冲刺训练</h3>
+</div>
+<div id="PanelWrapper">
+<table id="Panel">
+    <tr>
+        <td>
+            <input type="button" value="返回" onclick="backToSections()">
+        </td>
+        <td>
+            <input type="button" value="答案" onclick="reveal()">
+        </td>
+        <td id="SECTION_cell">
+            <span id="SECTION"></span>
+        </td>
+        <td id="PREV_cell">
+            <input id="PREV" type="button" value="上一题" onclick="prevQuestion()">
+        </td>
+        <td id="NEXT_cell">
+            <input id="NEXT" type="button" value="下一题" onclick="newQuestion()">
+        </td>
+    </tr>
+</table>
+</div>
+<div id="PhantomPanel"></div>
+<div id="progressBar">&nbsp;</div>
+<div id="Stem">
+<div id="MainContent">
+    <p id="PoliticsQuestionText"></p>
+    <div id="StatisticsWrap">
+        <img src="statistics.png" class="statisticsGraph" width="280px">
+        <span id="matchRate">正确率</span>
+        <span id="mistakenRate">错误题</span>
+    </div>
+</div>
+<input class="option politicalOption" id="SLOT0" type="button">
+<input class="option politicalOption" id="SLOT1" type="button">
+<input class="option politicalOption" id="SLOT2" type="button">
+<input class="option politicalOption" id="SLOT3" type="button">
+</div>
+</body>
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>-->
+<script src="jquery_mine.js"></script>
+<script src="indexes.js"></script>
+<script src="util.js"></script>
+<script>
+    $( "#Password" ).keydown( function( event ) {
+            if ( event.which == 13 ) {
+                login();
+            }
+        }
+    );
+
+    function highlightCorrect(index) {
+        $('#SLOT' + index).css('color', 'green');
+    }
+
+    function initOptions() {
+        $(".option").removeClass("wronganswer");
+        $(".option").attr('disabled', false);
+        $(".option").css('color', 'black');
+        $(".option").unbind('click');
+        $(".option").show();
+        $("body").css("background-image", "url('questionBackground.jpg'");
+        $("#StatisticsWrap").hide();
+    }
+
+    function initSection() {
+        $('#SECTION').css('color', 'black');
+    }
+
+    function disableRedo() {
+        $("#redo").attr('disabled', true);
+        $("#redo").addClass('redoDisabled');
+    }
+
+    function enableRedo() {
+        $('#redo').attr('disabled', false);
+        $('#redo').removeClass('redoDisabled');
+    }
+
+    function strikeAnswer() {
+        $(".wronganswer").attr('disabled', 'true');
+        $(".wronganswer").css('color', 'gray');
+    }
+
+    function completeSection() {
+        $('#SECTION').css('color', 'green');
+        if (!$('#SECTION').html().endsWith('[完成]')) $('#SECTION').html($('#SECTION').html() + " [完成]");
+    }
+
+    function backToSections() {
+        if (!allDone()) {
+            if (!window.confirm("有未完成的题目, 现在退出将无法统计成绩")) {
+                return;
+            }
+        }
+        $("#Sections").show();
+    }
+
+    function initStatistics() {
+        $("body").css("background-image", "none");
+        $(".option").hide();
+    }
+
+    var currentCorrectIndex = -1;
+    var currentQuestion = {};
+
+    var allSections;
+
+    var userdata;
+
+    function reveal() {
+        highlightCorrect(currentCorrectIndex);
+    }
+
+    function prevQuestion() {
+        if (indexes.cursor <= 0) return;
+        --indexes.cursor;
+        loadQuestion(indexes.cursor);
+    }
+
+    function generateSuboptionText(question) {
+        text = '';
+        for (var i = 1;;i++) {
+            if (question["suboption" + i] == undefined) break;
+            text += "<br/>" + subindex[i] + question["suboption" + i];
+        }
+        return text;
+    }
+
+    function generateQuestionText(question) {
+        var questionText = question["questionText"];
+        questionText = questionText.replace(/\$/g, "____");
+        questionText += generateSuboptionText(question);
+        questionText = question["index"] + ". " + questionText;
+        return questionText;
+    }
+
+    function processMistakenResponse(response) {
+        if (!response.startsWith("MISTAKEN")) {
+            console.log("Malform mistaken info.")
+        }
+        mistakenJson = response.substring("MISTAKEN ".length);
+        userdata['mistaken'] = JSON.parse(mistakenJson);
+        enableRedo();
+        console.log(userdata['mistaken']);
+    }
+
+    function wrongClicked(question) {
+        var xhr = new XMLHttpRequest();
+        var form = new FormData();
+
+        form.append("subject", 'mistaken');
+        form.append("username", userdata['username']);
+        form.append("dir", question['dir']);
+        form.append("index", question["index"]);
+                    
+        xhr.open("POST", "http://27.102.67.104/cgi-bin/server.py", true);
+        xhr.onreadystatechange = function (ev) {
+            if (xhr.readyState == 4) {
+                processMistakenResponse(xhr.responseText);
+            }
+        };
+        xhr.send(form);
+    }
+
+    function displayQuestion(jsonString) {
+        initOptions();
+        currentQuestion = JSON.parse(jsonString);
+        
+        currentCorrectIndex = alphasToIndex[currentQuestion["key"].trim()];
+        
+        $("#PoliticsQuestionText").html(generateQuestionText(currentQuestion));
+
+        $("#SECTION").html(currentQuestion["section"]);
+
+        $('.politicalOption').each(function(index){
+            $(this).val(alphas[index] + ". " + currentQuestion["option" + alphas[index]]);
+            if (index != currentCorrectIndex) { // This is the wrong answer
+                $(this).addClass("wronganswer");
+                $(this).on('click', function() {
+                    $(this).css('color', 'red');
+                    wrongClicked(currentQuestion);
+                    indexes.gotWrong();
+                });
+            } else { // This is the correct answer
+                $(this).on('click', function() {
+                    $(this).css('color', 'green');
+                    strikeAnswer();
+                    indexes.gotRight();
+                });
+            }
+        });
+
+        $("#Sections").hide();
+    }
+
+    function loadQuestion(questionIndex) {
+        var progressBarGrad = 'linear-gradient(to right';
+        for (var i = 0; i < countTotal(); i++) {
+            progressBarGrad += (i == questionIndex ? ',white' : ',green');
+        }
+        progressBarGrad += ')';
+        $('#progressBar').css('background-image', progressBarGrad);
+        jQuery.get('http://27.102.67.104/' + indexes[questionIndex]['dir'] + '/Source' + indexes[questionIndex]['index'], displayQuestion, 'text');
+    }
+
+    function newQuestion() {
+        if (indexes.cursor + 1 >= indexes.length) {
+            completeSection();
+            finalStatistics();
+            indexes.cursor = indexes.length;
+        } else {
+            ++indexes.cursor;
+            loadQuestion(indexes.cursor);
+        }
+    }
+
+    function finalStatistics() {
+        initStatistics();
+        allUnansweredToWrong();
+        var correctNum = countCorrect();
+        var total = countTotal();
+        $("#PoliticsQuestionText").html('');
+        $("#matchRate").html("正确" + Math.round(100.0 * countCorrect()/countTotal()) + "%");
+        $("#mistakenRate").html("错误" + (countTotal() - countCorrect()) + "题");
+        $("#StatisticsWrap").show();
+    }
+
+    function createSection(sectionData) {
+        var section = $('<div class=""><input type="button" class="section" value="' + sectionData['name'].split('（')[0] + '"></div>');
+        section.on('click', function() {
+            initSection();
+            var start = parseInt(sectionData['beginning']);
+            var end = parseInt(sectionData['ending']);
+            initIndex();
+            console.log(start);
+            console.log(end);
+            for (var i = start; i <= end; i++)
+                indexes.push({ 'dir': sectionData['dir'], 'index': i, 'status': 'unanswered' });
+            shuffle(indexes);
+            newQuestion();
+        });
+        return section;
+    }
+
+    function displaySections(data) {
+        allSections = JSON.parse(data);
+        for (var i = 0; i < allSections.length; i++) {
+            createSection(allSections[i]).appendTo("#Sections");
+        }
+        
+        var redo = $('<div class=""><input type="button" id="redo" class="redo" value="错题重做"></div>');
+        redo.appendTo("#Sections");
+        if (userdata['mistaken'].length == 0) {
+            disableRedo();
+        }
+        $("#redo").on('click', function() {
+            initSection();
+            initIndex();
+            setIndex(userdata['mistaken']);
+            console.log(indexes);
+            newQuestion();
+        })
+
+        $("#Sections").append('<div><img src="loginBackground.png" class="loginBackground"></div>')
+
+        $("#Sections").append('<div id="UsernameDisplay"><span>' + userdata['username'] + ' ' + userdata['name'] + '</span></div>');
+    }
+
+    function loadSections() {
+        jQuery.get('http://27.102.67.104/src/Manifest', displaySections, 'text');
+    }
+
+    function login() {
+        var xhr = new XMLHttpRequest();
+        var form = new FormData();
+        form.append("subject", 'login');
+        form.append("username", $("#Username").val());
+        form.append("password", $("#Password").val());
+        xhr.open("POST", "http://27.102.67.104/cgi-bin/server.py", true);
+        xhr.onreadystatechange = function (ev) {
+            if (xhr.readyState == 4) {
+                console.log(xhr.responseText);
+                if (xhr.responseText.trim().startsWith("OK")) {
+                    $("#Login").hide();
+                    userdata = JSON.parse(xhr.responseText.substring("OK ".length));
+                    if (userdata['mistaken'].length > 0)
+                        userdata['mistaken'] = JSON.parse(userdata['mistaken']);
+                    else
+                        userdata['mistaken'] = []
+                    loadSections();
+                } else {
+                    alert("用户名或密码错误.");
+                }
+            }
+        };
+        xhr.send(form);
+    }
+</script>
+</html>
