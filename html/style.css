@@ -16,7 +16,8 @@
     width: 100%;
     left: 0;
     top: 0;
-    padding-top: 8px; 
+    padding-top: 8px;
+    background-color: rgba(255,255,255, 0.6);
 }
 
 .erganzen {
@@ -146,6 +147,13 @@
 .statisticsGraph {
     display: block;
     margin: auto;
+    position: relative;
+    top: -300px;
+}
+
+.statisticsBackground {
+    position: relative;
+    top: 195px;
 }
 
 #StatisticsWrap {
@@ -155,16 +163,20 @@
 }
 
 #matchRate {
+    font-weight: 100px;
+    color: green;
     position: absolute;
     left: 128px;
-    top: 88px;
+    top: 80px;
     font-size: 18px;
 }
 
 #mistakenRate {
+    font-weight: 100px;
+    color: red;
     position: absolute;
     left: 65px;
-    top: 169px;
+    top: 161px;
     font-size: 18px;
 }
 
@@ -172,10 +184,106 @@
     position: relative;
 }
 
+#Stem {
+    background-color: rgba(255,255,255, 0.6);
+}
+
+.wronganswer.picked {
+    color: red;
+}
+
+.rightanswer.picked {
+    color: green;
+}
+
+.wronganswer.picked.striked {
+    color: #b72d2d;
+}
+
+.wronganswer.notpicked.striked {
+    color: gray;
+}
+
+#exitBackground {
+    display: block;
+    position: absolute;
+    top: 30%;
+    width: 70%;
+    left: 15%;
+    z-index: 995;
+    opacity: 1;
+    border-radius: 10px;
+    border: thin solid #0077d9;
+    border-top: 25px solid #0077d9;
+    filter: brightness(50%);
+    height: 150px;
+    overflow: hidden;
+}
+
+#exitConfirm {
+    position: absolute;
+    top: 235px;
+    width: 220px;
+    left: 127px;
+    font-size: 18px;
+    z-index: 996;
+    padding: 20px;
+}
+
+#exitBackgroundImage {
+    display: block;
+    position: absolute;
+    top: 200px;
+    width: 350px;
+    left: 0px;
+    z-index: 995;
+}
+
+.exitConfirmButton {
+    display: inline-block;
+    font-size: 18px;
+    border: 0;
+    text-align: center;
+    outline: 0;
+    color: white;
+    width: 100%;
+}
+
+#cancelExit {
+    background-color: #0077d9;
+}
+
+#confirmExit {
+    background-color: #b72d2d;
+}
+
 body {
     background-image: url('questionBackground.jpg');
     background-repeat: no-repeat;
     background-size: 1440px 675px;
+}
+
+#SECTION {
+    max-height: 44px;
+    overflow-y: hidden;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+    padding: 8px;
+    overflow-y: scroll; 
+}
+
+input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 * {

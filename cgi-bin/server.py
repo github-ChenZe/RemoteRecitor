@@ -33,13 +33,14 @@ if subject == 'login':
 
 elif subject == 'mistaken':
     username = form.getvalue("username");
+    password = form.getvalue("password");
     mistakenDir = form.getvalue("dir");
     index = form.getvalue("index");
 
     mydb = mysql.connector.connect(host='localhost',user='root',passwd='Chen004948*',database='accounts')
     mycursor = mydb.cursor()
-    sql = 'SELECT * FROM students WHERE username=%s'
-    val = (username,)
+    sql = 'SELECT * FROM students WHERE username=%s AND password=%s'
+    val = (username, password)
     mycursor.execute(sql,val)
     myresult = mycursor.fetchone()
     if myresult is not None:

@@ -119,7 +119,22 @@
 
 #UsernameDisplay {
     text-align: center;
-    position: absolute;
+    position: fixed;
+    bottom: 0;
+}
+
+.Copyright, .CopyrightLogin {
+    text-align: center;
+    color: #808080;
+    width: 100%;
+    font-size: xx-small;
+    margin-top: 50px;
+    opacity: 0.30;
+    z-index: -1;
+}
+
+.CopyrightLogin {
+    position: fixed;
     bottom: 0;
 }
 

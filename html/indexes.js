@@ -13,6 +13,15 @@ function initIndex() {
         if (indexes[indexes.cursor]['status'] == 'unanswered')
             indexes[indexes.cursor]['status'] = 'wrong';
     }
+    indexes.putQuestion = function(questionJson) {
+        indexes[indexes.cursor]['questionJson'] = questionJson;
+    }
+    indexes.putFreeze = function(freezingState) {
+        indexes[indexes.cursor]['freeze'] = freezingState;
+    }
+    indexes.getFreeze = function(freezingState) {
+        return indexes[indexes.cursor]['freeze'];
+    }
 }
 
 function setIndex(list) {
