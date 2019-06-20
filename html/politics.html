@@ -262,7 +262,9 @@
         for (var i = 0; i < 4; i++) {
             $("#SLOT" + i).removeClass($("#SLOT" + i).attr("class"))
             $("#SLOT" + i).addClass(freezingState[i]);
-
+        }
+        if (indexes[indexes.cursor]['status'] != 'unanswered') {
+            enableNext();
         }
     }
 
@@ -305,7 +307,7 @@
         var freeze = indexes.getFreeze();
         if (freeze != undefined) {
             loadState(freeze);
-            enableNext();
+            //enableNext();
         }
 
         $("#Sections").hide();
@@ -334,6 +336,7 @@
     }
 
     function newQuestion() {
+        $("#NEXT").attr('disabled', true);
         saveCurrentState();
         if (indexes.cursor + 1 >= indexes.length) {
             completeSection();
