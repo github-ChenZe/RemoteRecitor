@@ -1,1 +1,33 @@
-politics.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" href="style.css" rel="stylesheet">
+    <link type="text/css" href="LoginCSS.css" rel="stylesheet">
+    <title>快啲去训觉</title>
+</head>
+<body style="background-image: url(https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/93NxU-b/realistic-stars-twinkle-in-the-night-sky-loopable_vyotq2pj__F0000.png); background-size: 600px; background-repeat: repeat-y;">
+<div id="innerDiv" style="position: fixed; width: 100%; height: 100%; left: 0; top: 0; background-color: white;">
+<img width="100%" id="exitBackgroundImage" src="Husky.png">
+<div id="exitConfirm">
+    <p style="color: black; margin-top: 20px; margin-bottom: 5px;">咁夜仲唔訓?</p>
+    <table style="text-align: center; width: 100%;">
+        <tr>
+            <td>
+                <input class="exitConfirmButton"id="confirmExit" onclick="exitThis()" value="去训觉啦" type="button">
+            </td>
+        </tr>
+    </table>
+</div>
+</div>
+</body>
+<script src="jquery_mine.js"></script>
+<script>
+function exitThis() {
+    $("#innerDiv").css('display', 'none');
+    $("#exitConfirm").hide();
+    $("#exitBackgroundImage").hide();
+}
+</script>
+</html>
